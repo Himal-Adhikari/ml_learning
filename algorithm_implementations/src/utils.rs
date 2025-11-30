@@ -1,3 +1,5 @@
+use std::collections::HashMap;
+
 use nalgebra::{Dyn, Matrix, VecStorage};
 use rand::prelude::*;
 
@@ -7,25 +9,25 @@ pub fn stratified_shuffle_split(
     ratio: f32,
 ) -> Matrix<f32, Dyn, Dyn, VecStorage<f32, Dyn, Dyn>> {
     // (Item, Count)
-    let mut item_list: Vec<(u8, u32)> = Vec::new();
     let mut rng = rand::rng();
     let num_rows = main_mat.nrows();
 
     let mut sequence = (0..num_rows).into_iter().collect::<Vec<_>>();
     sequence.shuffle(&mut rng);
 
-    'outer: for &item in strat_basis.iter() {
-        for i in item_list.iter_mut() {
-            if i.0 == item {
-                i.1 += 1;
-                continue 'outer;
+    let mut item_list = HashMap::new();
+    for &item in strat_basis.iter() {
+        match item_list.get_key_value(&item) {
+            Some((_, &count)) => {
+                item_list.insert(item, count + 1);
+            }
+            None => {
+                item_list.insert(item, 1);
             }
         }
-        item_list.push((item, 1));
     }
-
-    for item in item_list.iter_mut() {
-        item.1 = (item.1 as f32 * ratio) as u32;
+    for (_, count) in item_list.iter_mut() {
+        *count = (*count as f32 * ratio) as i32;
     }
 
     let mut counts = item_list.iter().map(|(a, _)| (*a, 0)).collect::<Vec<_>>();
