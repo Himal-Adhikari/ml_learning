@@ -1,2 +1,4 @@
 .direnv/
 datasets/
+algorithm_implementations/target/
+algorithm_implementations/iris.csv
